@@ -10,9 +10,9 @@ let Readable = require('stream').Readable;
 
 sequelize.sync().then(() => console.log('db is ready'));
 
-const port = 80;
+const port: number = 80;
 
-let filepath;
+let filepath: String;
 
 // TODO:add certificates for https
 
@@ -32,7 +32,7 @@ function bufferToStream(buffer) {
   return stream;
 }
 
-function streamSong(req, res, size) {
+function streamSong(res, size) {
     res.writeHead(200, {
         'Content-Length': size,
         'Content-Type': 'audio/mpeg'
@@ -69,7 +69,7 @@ function handleMeta(res, metadata) {
     res.writeHead(200, {
         'Content-Type': 'text/plain; charset=utf-8'
     });
-    let string_meta = util.inspect(metadata.common, { showHidden: false, depth: null });
+    let string_meta: String = util.inspect(metadata.common, { showHidden: false, depth: null });
     res.end(string_meta);
 }
 
@@ -77,7 +77,7 @@ function handleAll(res, metasongs) {
     res.writeHead(200, {
         'Content-Type': 'text/plain; charset=utf8'
     });
-    let string_meta = JSON.stringify(metasongs);
+    let string_meta: String = JSON.stringify(metasongs);
     res.end(string_meta);
 }
 
@@ -86,10 +86,10 @@ createServer(async (req, res) => {
     if (req.url.split('/')[1] == 'tracks') {
         try {
             let song = await Song.findOne({where: {id: req.url.split('/')[2]}})
-            filepath = `D:\Users\\Sergio\\Music\\Actual Music\\${song.filename}`;
+            filepath = `D:\\Users\\Sergio\\Music\\Actual Music\\${song.filename}`;
             let {size} = await fileInfo(filepath);
-            let range = req.headers.range;
-            streamSong(req, res, size);
+            // let range = req.headers.range;
+            streamSong(res, size);
         }
         catch(e) {
             notFound(res);
@@ -97,6 +97,58 @@ createServer(async (req, res) => {
     }
     else if (req.url.split('/')[1] == 'v0') {
         let id = req.url.split('/')[2];
+        if (id == 'album') {
+            id = req.url.split('/')[3];
+            if (id == 'all'){
+                let songs = await Song.findAll();
+                let albums = [];
+                for (let i = 0; i < songs.length; i++) {
+                    filepath = `D:\Users\\Sergio\\Music\\Actual Music\\${songs[i].filename}`;
+                    let metadata = await mm.parseFile(filepath);
+                    if (!albums.some(album => album.title == metadata.common.album)) {
+                        let album = {title: metadata.common.album, artist: metadata.common.artist, id: i+1};
+                        albums.push(album);
+                    }
+                }
+
+                res.writeHead(200, {
+                    'Content-Type': 'text/plain; charset=utf8'
+                });
+                let string_meta: String = JSON.stringify(albums);
+                res.end(string_meta);
+            }
+            else if (id == 'cover') {
+                let albumname = req.url.split('/')[4].replace(/%20/g, ' ');
+                try {
+                    let song = await Song.findOne({where: {album: albumname}});
+                    filepath = `D:\Users\\Sergio\\Music\\Actual Music\\${song.filename}`;
+                    let metadata = await mm.parseFile(filepath);
+                    metadata.common.id = song.id;
+                    handleCover(res, metadata);
+                }
+                catch(e) {
+                    notFound(res);
+                }
+            }
+            else {
+                id = id.replace(/%20/g, ' ');
+                let songs = await Song.findAll();
+                let albumsongs = [];
+                for (let i = 0; i < songs.length; i++) {
+                    filepath = `D:\Users\\Sergio\\Music\\Actual Music\\${songs[i].filename}`;
+                    let metadata = await mm.parseFile(filepath);
+                    if (metadata.common.album == id) {
+                        albumsongs.push(songs[i]);
+                    }
+                }
+
+                res.writeHead(200, {
+                    'Content-Type': 'text/plain; charset=utf8'
+                });
+                let string_meta: String = JSON.stringify(albumsongs);
+                res.end(string_meta);
+            }
+        }
         if (id == 'cover'){
             id = req.url.split('/')[3];
             try {

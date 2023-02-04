@@ -8,6 +8,9 @@ class Song extends Model {
 Song.init({
     filename: {
         type: DataTypes.STRING
+    },
+    album: {
+        type: DataTypes.STRING
     }
 }, {
     sequelize: sequelize,
