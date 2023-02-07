@@ -1,3 +1,5 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const { createServer } = require('http');
 const { stat, createReadStream, createWriteStream } = require('fs');
 const { promisify } = require('util');
@@ -99,9 +101,9 @@ createServer(async (req, res) => {
                 res.end(string_meta);
             }
             else if (id == 'cover') {
-                let albumname = req.url.split('/')[4].replace(/%20/g, ' ');
+                let id = req.url.split('/')[4];
                 try {
-                    let song = await Song.findOne({ where: { album: albumname } });
+                    let song = await Song.findOne({ where: { id: id } });
                     filepath = `D:\Users\\Sergio\\Music\\Actual Music\\${song.filename}`;
                     let metadata = await mm.parseFile(filepath);
                     metadata.common.id = song.id;
@@ -112,15 +114,20 @@ createServer(async (req, res) => {
                 }
             }
             else {
-                id = id.replace(/%20/g, ' ');
-                let songs = await Song.findAll();
+                id = id;
+                let song = await Song.findOne({ where: { id: id } });
+                let songs = await Song.findAll({ where: { album: song.album } });
                 let albumsongs = [];
                 for (let i = 0; i < songs.length; i++) {
                     filepath = `D:\Users\\Sergio\\Music\\Actual Music\\${songs[i].filename}`;
                     let metadata = await mm.parseFile(filepath);
-                    if (metadata.common.album == id) {
-                        albumsongs.push(songs[i]);
-                    }
+                    metadata.common.id = songs[i].id;
+                    metadata.common.duration = metadata.format.duration;
+                    delete metadata.common.picture;
+                    albumsongs.push(metadata.common);
+                    // if (metadata.common.album == id) {
+                    //     albumsongs.push(songs[i]);
+                    // }
                 }
                 res.writeHead(200, {
                     'Content-Type': 'text/plain; charset=utf8'
@@ -148,6 +155,7 @@ createServer(async (req, res) => {
                 filepath = `D:\Users\\Sergio\\Music\\Actual Music\\${songs[i].dataValues.filename}`;
                 let metadata = await mm.parseFile(filepath);
                 delete metadata.common.picture;
+                metadata.common.duration = metadata.format.duration;
                 metadata.common.id = songs[i].dataValues.id;
                 metasongs.push(metadata.common);
             }
