@@ -12,7 +12,7 @@ let Readable = require('stream').Readable;
 
 sequelize.sync().then(() => console.log('db is ready'));
 
-const port: number = 80;
+const port: number = 3334;
 let folder: String = '/home/sergiodkpo/Music/'; // 'D:\\Users\\Sergio\\Music\\Actual Music\\'
 let filepath: String;
 
@@ -112,7 +112,7 @@ createServer(async (req, res) => {
                             albums.push(album);
                         }
                     } catch (e){
-
+                        notFound(res);
                     }
                 }
 
@@ -149,7 +149,7 @@ createServer(async (req, res) => {
                         delete metadata.common.picture;
                         albumsongs.push(metadata.common);
                     } catch (e) {
-
+                        notFound(res);
                     }
                     // if (metadata.common.album == id) {
                     //     albumsongs.push(songs[i]);
@@ -173,7 +173,7 @@ createServer(async (req, res) => {
                 handleCover(res, metadata);
             }
             catch (error) {
-                
+                notFound(res);
             }
         }
         else if (id == 'all') {
@@ -189,7 +189,7 @@ createServer(async (req, res) => {
                     metadata.common.id = songs[i].dataValues.id;
                     metasongs.push(metadata.common);
                 } catch (e) {
-
+                    notFound(res);
                 }
             }
             

@@ -11,7 +11,7 @@ const util = require('util');
 let Readable = require('stream').Readable;
 sequelize.sync().then(() => console.log('db is ready'));
 const port = 3334;
-let folder = '/home/sergiodkpo/Music/';
+let folder = '/home/sergiodkpo/Music/'; // 'D:\\Users\\Sergio\\Music\\Actual Music\\'
 let filepath;
 // TODO:add certificates for https
 function notFound(res) {
@@ -71,7 +71,7 @@ createServer(async (req, res) => {
     if (req.url.split('/')[1] == 'tracks') {
         try {
             let song = await Song.findOne({ where: { id: req.url.split('/')[2] } });
-            filepath = `${folder}/${song.filename}`;
+            filepath = `${folder}${song.filename}`;
             let { size } = await fileInfo(filepath); // let range = req.headers.range;
             streamSong(res, size);
         }
@@ -88,7 +88,7 @@ createServer(async (req, res) => {
                 let albums = [];
                 for (let i = 0; i < songs.length; i++) {
                     try {
-                        filepath = `${folder}/${songs[i].filename}`;
+                        filepath = `${folder}${songs[i].filename}`;
                         let metadata = await mm.parseFile(filepath);
                         if (!albums.some(album => album.title == metadata.common.album)) {
                             let album = { title: metadata.common.album, artist: metadata.common.artist, id: i + 1 };
@@ -96,6 +96,7 @@ createServer(async (req, res) => {
                         }
                     }
                     catch (e) {
+                        notFound(res);
                     }
                 }
                 res.writeHead(200, {
@@ -108,7 +109,7 @@ createServer(async (req, res) => {
                 let id = req.url.split('/')[4];
                 try {
                     let song = await Song.findOne({ where: { id: id } });
-                    filepath = `${folder}/${song.filename}`;
+                    filepath = `${folder}${song.filename}`;
                     let metadata = await mm.parseFile(filepath);
                     metadata.common.id = song.id;
                     handleCover(res, metadata);
@@ -124,7 +125,7 @@ createServer(async (req, res) => {
                 let albumsongs = [];
                 for (let i = 0; i < songs.length; i++) {
                     try {
-                        filepath = `${folder}/${songs[i].filename}`;
+                        filepath = `${folder}${songs[i].filename}`;
                         let metadata = await mm.parseFile(filepath);
                         metadata.common.id = songs[i].id;
                         metadata.common.duration = metadata.format.duration;
@@ -132,6 +133,7 @@ createServer(async (req, res) => {
                         albumsongs.push(metadata.common);
                     }
                     catch (e) {
+                        notFound(res);
                     }
                     // if (metadata.common.album == id) {
                     //     albumsongs.push(songs[i]);
@@ -148,12 +150,13 @@ createServer(async (req, res) => {
             id = req.url.split('/')[3];
             try {
                 let song = await Song.findOne({ where: { id: id } });
-                filepath = `${folder}/${song.filename}`;
+                filepath = `${folder}${song.filename}`;
                 let metadata = await mm.parseFile(filepath);
                 metadata.common.id = song.id;
                 handleCover(res, metadata);
             }
             catch (error) {
+                notFound(res);
             }
         }
         else if (id == 'all') {
@@ -161,7 +164,7 @@ createServer(async (req, res) => {
             let songs = await Song.findAll();
             for (let i = 0; i < songs.length; i++) {
                 try {
-                    filepath = `${folder}/${songs[i].dataValues.filename}`;
+                    filepath = `${folder}${songs[i].dataValues.filename}`;
                     let metadata = await mm.parseFile(filepath);
                     delete metadata.common.picture;
                     metadata.common.duration = metadata.format.duration;
@@ -169,6 +172,7 @@ createServer(async (req, res) => {
                     metasongs.push(metadata.common);
                 }
                 catch (e) {
+                    notFound(res);
                 }
             }
             handleAll(res, metasongs);
@@ -176,7 +180,7 @@ createServer(async (req, res) => {
         else {
             try {
                 let song = await Song.findOne({ where: { id: id } });
-                filepath = `${folder}/${song.filename}`;
+                filepath = `${folder}${song.filename}`;
                 let metadata = await mm.parseFile(filepath);
                 handleMeta(res, metadata);
             }
