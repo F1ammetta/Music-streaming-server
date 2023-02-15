@@ -1,5 +1,5 @@
 {
-  "name": "soncor",
+  "name": "httpsxpress",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -15,8 +15,10 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
+    "express": "^4.18.2",
     "fs": "^0.0.1-security",
     "http": "^0.0.1-security",
+    "https": "^1.0.0",
     "music-metadata": "^7.13.0",
     "sequelize": "^6.28.0",
     "sqlite3": "^5.1.4",
