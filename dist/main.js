@@ -74,6 +74,11 @@ function handleAll(res, metasongs) {
     let string_meta = JSON.stringify(metasongs);
     res.end(string_meta);
 }
+app.get('/app', (req, res) => {
+    const stream = createReadStream('C:\\Users\\Sergio\\flutter\\soncore\\build\\app\\outputs\\flutter-apk\\app-debug.apk');
+    res.writeHead(200, { 'Content-Type': 'application/vnd.android.package-archive' });
+    stream.pipe(res);
+});
 app.get('/tracks/:id', async (req, res) => {
     try {
         let song = await Song.findOne({ where: { id: req.params.id } });
@@ -177,4 +182,9 @@ app.get('/v0/meta/:id', async (req, res) => {
     }
 });
 https.createServer(options, app).listen(port, () => console.log('Running on port: ', port));
-//# sourceMappingURL=test.js.map
+var http = express();
+http.get('*', function (req, res) {
+    res.redirect('https://' + req.headers.host + req.url);
+});
+http.listen(80, () => console.log('Running on port: ', 80));
+//# sourceMappingURL=main.js.map
